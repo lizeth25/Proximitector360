@@ -1,21 +1,17 @@
-#include <Arduino.h>
-#include <stdint.h>
-#include <math.h>
-
 #define TRIG 0
 #define ECHO 1
 #define SECTRIG 6
 #define SECECHO 12
 #define OVERSMPL 5
  
-float waveTime, distance, curr_dist;
+float waveTime, waveTime2, distance, distance2, curr_dist, curr_dist2;
 
 void setup();
 void loop();
 float readSensor();
 float sampling();
 void dist_motor1(float power);
-void vel_motor1(float power);
+
 
 float readSensor2();
 float sampling2();
@@ -27,8 +23,6 @@ void setup() {
   pinMode(ECHO, INPUT);
   pinMode(SECTRIG, OUTPUT);
   pinMode(SECECHO, INPUT);
-  //pinMode(LED, OUTPUT); //currently testing with LED, will replace with haptic motor
-  //pinMode(LED,LOW); //currently testing with LED, will replace with haptic motor
   
   // Set bit 0 in port D to output
   DDRD |= (1 << PORTD0);
@@ -77,7 +71,6 @@ float readSensor(){
   digitalWrite(TRIG, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG, LOW);
-  delay(2); // A delay of 60ms to allow wave to travel
 
   // Reading the Echo Pin
   waveTime = pulseIn(ECHO, HIGH);
@@ -94,13 +87,12 @@ float readSensor2(){
   digitalWrite(SECTRIG, HIGH);
   delayMicroseconds(10);
   digitalWrite(SECTRIG, LOW);
-  delay(2); // A delay of 60ms to allow wave to travel
 
   // Reading the Echo Pin
-  waveTime = pulseIn(SECECHO, HIGH);
+  waveTime2 = pulseIn(SECECHO, HIGH);
   // Speed of sound is 343 m/s, use to determine distance from our waveTime
-  distance = (waveTime / 2.0) * 0.0343;
-  return distance;
+  distance2 = (waveTime2 / 2.0) * 0.0343;
+  return distance2;
 }
 
 //This function calculates the average of five reads and returns it
@@ -108,7 +100,7 @@ float sampling(){
   float reads = 0;
   for (int i = 0; i < OVERSMPL; i++){
     curr_dist = readSensor(); //calls the read function once
-
+    
     //if our distance is in range add to our reads in order to average
     if (curr_dist <= 400.0 && curr_dist >= 2.0) {
       reads += curr_dist;
@@ -121,11 +113,13 @@ float sampling(){
 float sampling2(){
   float reads = 0;
   for (int i = 0; i < OVERSMPL; i++){
-    curr_dist = readSensor2(); //calls the read function once
-
+    curr_dist2 = readSensor2(); //calls the read function once
+    Serial.print("Curr: ");
+    Serial.println(curr_dist2);
+    
     //if our distance is in range add to our reads in order to average
-    if (curr_dist <= 400.0 && curr_dist >= 2.0) {
-      reads += curr_dist;
+    if (curr_dist2 <= 400.0 && curr_dist2 >= 2.0) {
+      reads += curr_dist2;
     }
   }
   return reads/OVERSMPL;
@@ -136,7 +130,7 @@ void dist_motor1(float power){
   
   // Set PORTD0 for 1 ms
   PORTD |= (1 << PORTD0);
-  delayMicroseconds(40000.0-avg_dis);
+  delayMicroseconds(40000.0 - avg_dis);
   // Clear PORTD0
   PORTD &= ~(1 << PORTD0);
   delayMicroseconds(avg_dis);
@@ -159,7 +153,6 @@ void dist_motor2(float power){
 void vel_motor1(float power){
   float avg_dist = power*10;
 
-  
   // Set PORTD0 for 1 ms
   PORTD |= (1 << PORTD0);
   delayMicroseconds(avg_dist);
