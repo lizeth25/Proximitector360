@@ -148,15 +148,3 @@ void dist_motor2(float power){
   delayMicroseconds(avg_dis);
   
 }
-
-
-void vel_motor1(float power){
-  float avg_dist = power*10;
-
-  // Set PORTD0 for 1 ms
-  PORTD |= (1 << PORTD0);
-  delayMicroseconds(avg_dist);
-  // Clear PORTD0
-  PORTD &= ~(1 << PORTD0);
-  delayMicroseconds(4000.0-avg_dist);
-}
