@@ -3,27 +3,41 @@
 #define SECTRIG 6
 #define SECECHO 12
 #define OVERSMPL 5
+#define MOTOR1 3
+#define MOTOR2 10
  
 float waveTime, waveTime2, distance, distance2, curr_dist, curr_dist2;
 
 void setup();
 void loop();
 float readSensor();
-float sampling();
-void dist_motor1(float power);
+int sampling();
+//void dist_motor1(float power);
+void dist_motor1(int power);
 
 
 float readSensor2();
-float sampling2();
-void dist_motor2(float power);
+int sampling2();
+//void dist_motor2(float power);
+void dist_motor2(int power);
 
 void setup() {
   Serial.begin (9600);
+
+  //Setting our trigs to output and echos to input
   pinMode(TRIG, OUTPUT);
   pinMode(ECHO, INPUT);
   pinMode(SECTRIG, OUTPUT);
   pinMode(SECECHO, INPUT);
-  
+
+  //Setting our motors to outputs and turning them off
+  pinMode(MOTOR1, OUTPUT);
+  pinMode(MOTOR1, LOW);
+
+  //pinMode(MOTOR2, OUTPUT);
+  //pinMode(MOTOR2, LOW);
+
+ 
   // Set bit 0 in port D to output
   DDRD |= (1 << PORTD0);
   // Clear PORTD0 in setup
@@ -33,22 +47,21 @@ void setup() {
   DDRB |= (1 << PORTB6);
   // Clear PORTD0 in setup
   PORTB &= ~(1 << PORTB6);
-
+  
 }
  
 void loop() { 
 
-  //calculating the average distance to display from 5 samplings
-  //float avg_dist = 250.15;
+  //calculating the average distance to display from 5 samplings for sensor 1
   
-  float avg_dist = sampling();
+  int avg_dist = sampling();
   Serial.print(avg_dist);
-  Serial.println(" cm for motor 1");
+  Serial.println(" mode motor 1");
   dist_motor1(avg_dist);
-
-  float avg_dist_m2 = sampling2();
+  //calculating the average distance to display from 5 samplings for sensor 2
+  int avg_dist_m2 = sampling2();
   Serial.print(avg_dist_m2);
-  Serial.println(" cm for motor 2");
+  Serial.println(" mode motor 2");
   dist_motor2(avg_dist_m2);
 
 }
@@ -66,7 +79,6 @@ void loop() {
 float readSensor(){
   // Write to the Trigger Pin to begin sending wave
   digitalWrite(TRIG, LOW);
-  //digitalWrite(TRIG2,LOW)
   delayMicroseconds(2);
   digitalWrite(TRIG, HIGH);
   delayMicroseconds(10);
@@ -82,7 +94,6 @@ float readSensor(){
 float readSensor2(){
   // Write to the Trigger Pin to begin sending wave
   digitalWrite(SECTRIG, LOW);
-  //digitalWrite(TRIG2,LOW)
   delayMicroseconds(2);
   digitalWrite(SECTRIG, HIGH);
   delayMicroseconds(10);
@@ -95,56 +106,128 @@ float readSensor2(){
   return distance2;
 }
 
-//This function calculates the average of five reads and returns it
-float sampling(){
+/*This function calculates the average of five reads and returns it as
+ * a value from 1-4 depending on the distance of an object. Closer 
+ * objects are near 1 and farther objects will be closer to 4. This is 
+ * for the first sensor
+ */
+int sampling(){
   float reads = 0;
   for (int i = 0; i < OVERSMPL; i++){
     curr_dist = readSensor(); //calls the read function once
-    
+    /*
+    Serial.print("Curr: ");
+    Serial.println(curr_dist);
+    */
     //if our distance is in range add to our reads in order to average
     if (curr_dist <= 400.0 && curr_dist >= 2.0) {
       reads += curr_dist;
     }
+    if (curr_dist > 400.0 || curr_dist < 2.0){
+      reads += 400;
+    }
   }
-  return reads/OVERSMPL;
+
+  reads = reads/OVERSMPL;
+  Serial.print("Avg Sensor 1: ");
+  Serial.println(reads);
+
+  //Returning the case in which our average distance belongs in 
+  if (reads > 300 && reads <= 400 || reads>400 || reads<2){
+    return 6;
+  }
+  else if (reads > 200 && reads <= 300){
+    return 5;
+  }
+  else if (reads > 150 && reads <= 200){
+    return 4;
+  }
+  else if (reads > 100 && reads <= 150){
+    return 3;
+  }
+  else if (reads > 50 && reads <= 100){
+    return 2;
+  }
+  else{
+    return 1;
+  }
 }
 
-//This function calculates the average of five reads and returns it
-float sampling2(){
+/*This function calculates the average of five reads and returns it as
+ * a value from 1-4 depending on the distance of an object. Closer 
+ * objects are near 1 and farther objects will be closer to 4. This is
+ * for the second sensor
+ */
+int sampling2(){
   float reads = 0;
   for (int i = 0; i < OVERSMPL; i++){
     curr_dist2 = readSensor2(); //calls the read function once
+    /*
     Serial.print("Curr: ");
-    Serial.println(curr_dist2);
+    Serial.println(curr_dist2);*/
     
     //if our distance is in range add to our reads in order to average
     if (curr_dist2 <= 400.0 && curr_dist2 >= 2.0) {
       reads += curr_dist2;
     }
+    if (curr_dist > 400.0 || curr_dist < 2.0){
+      reads += 400;
+    }
   }
-  return reads/OVERSMPL;
+
+  reads = reads/OVERSMPL;
+  Serial.print("Avg Sensor 2: ");
+  Serial.println(reads);
+
+  //Returning the case in which our average distance belongs in 
+  if (reads > 300 && reads <= 400 || reads>400 || reads<2){
+    return 6;
+  }
+  else if (reads > 200 && reads <= 300){
+    return 5;
+  }
+  else if (reads > 150 && reads <= 200){
+    return 4;
+  }
+  else if (reads > 100 && reads <= 150){
+    return 3;
+  }
+  else if (reads > 50 && reads <= 100){
+    return 2;
+  }
+  else{
+    return 1;
+  }
 }
 
-void dist_motor1(float power){
-  float avg_dis = power*100;
+
+void dist_motor1(int power){
+  int avg_dis = power*10000;
   
   // Set PORTD0 for 1 ms
   PORTD |= (1 << PORTD0);
-  delayMicroseconds(40000.0 - avg_dis);
+  delayMicroseconds(avg_dis);
+  //delayMicroseconds(600000.0 - avg_dis);
+  
   // Clear PORTD0
   PORTD &= ~(1 << PORTD0);
-  delayMicroseconds(avg_dis);
+  //delayMicroseconds(avg_dis);
+  delayMicroseconds(600000.0 - avg_dis);
   
 }
 
-void dist_motor2(float power){
-  float avg_dis = power*100;
+
+void dist_motor2(int power){
+  int avg_dis = power*10000;
   
-  // Set PORTD0 for 1 ms
+  // Set PORTB6 for 1 ms
   PORTB |= (1 << PORTB6);
-  delayMicroseconds(40000.0-avg_dis);
-  // Clear PORTD0
-  PORTB &= ~(1 << PORTB6);
   delayMicroseconds(avg_dis);
+  //delayMicroseconds(600000.0 - avg_dis);
+  
+  // Clear PORTB6
+  PORTB &= ~(1 << PORTB6);
+  //delayMicroseconds(avg_dis);
+  delayMicroseconds(600000.0 - avg_dis);
   
 }
