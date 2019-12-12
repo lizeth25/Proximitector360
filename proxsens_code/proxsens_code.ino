@@ -33,10 +33,6 @@ void setup() {
   //Setting our motors to outputs and turning them off
   pinMode(MOTOR1, OUTPUT);
   pinMode(MOTOR1, LOW);
-
-  //pinMode(MOTOR2, OUTPUT);
-  //pinMode(MOTOR2, LOW);
-
  
   // Set bit 0 in port D to output
   DDRD |= (1 << PORTD0);
@@ -115,10 +111,7 @@ int sampling1(){
   float reads1 = 0;
   for (int i = 0; i < OVERSMPL; i++){
     curr_dist1 = readSensor1(); //calls the read function once
-    /*
-    Serial.print("Curr: ");
-    Serial.println(curr_dist);
-    */
+    
     //if our distance is in range add to our reads in order to average
     if (curr_dist1 <= 400.0 && curr_dist1 >= 2.0) {
       reads1 += curr_dist1;
@@ -162,10 +155,7 @@ int sampling2(){
   float reads2 = 0;
   for (int i = 0; i < OVERSMPL; i++){
     curr_dist2 = readSensor2(); //calls the read function once
-    /*
-    Serial.print("Curr: ");
-    Serial.println(curr_dist);
-    */
+    
     //if our distance is in range add to our reads in order to average
     if (curr_dist2 <= 400.0 && curr_dist2 >= 2.0) {
       reads2 += curr_dist2;
